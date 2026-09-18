@@ -16,15 +16,21 @@ freshly tightened risk rules — and it's now ~28% of Nova's deposit volume.
 Excluding it, Nova's approval rate in June is **79.3%, essentially flat** versus
 the baseline.
 
-**There is one real, separate problem**: on `SORVA-14` (our UK card route),
-Japanese-card approval rate fell from 74.6% to 54.8% right after June 11, when
-SORVA reallocated BIN ranges for Japanese cards without notifying us. Declines
-are dominated by `do_not_honor` — consistent with an issuer/routing mismatch on
-their end, not anything Nova or we did.
+**There is one real, separate problem**: on `SORVA-14` (a card route via
+processor SORVA), Japanese-card approval rate fell from 74.6% to 54.8% right
+after June 11, when SORVA reallocated BIN ranges for Japanese cards without
+notifying us. Declines are dominated by `do_not_honor` — consistent with an
+issuer/routing mismatch on their end, not anything Nova or we did.
 
-Estimated cost to Nova, June 1–28, vs. the pre-June baseline rate: **~$433K in
-deposit volume that didn't go through**, of which **~$94K is directly attributable
-to the SORVA/BIN issue**; the remainder is the new-route mix effect above.
+Estimated cost, June 1–28, using dollar-weighted approval rate (approved $ ÷
+attempted $, which is the right way to cost this — a flat count-based estimate
+overstates it, see below): **~$158K in deposit volume that didn't go through**
+across all of Nova's business. Almost all of that (**~$174K**) is the NBLX-07
+new-route effect; the rest of Nova's existing business actually ran slightly
+*ahead* of baseline in aggregate, which **masks** the SORVA problem in the
+whole-book number. Looked at on its own terms, the SORVA/JP issue alone cost
+**~$101K** in lost deposits from Japanese card customers — real money, just
+netted out by unrelated gains elsewhere in the total.
 
 Ruled out: the June 22 dashboard bug (ops log confirms it only mislabeled a date
 filter, underlying figures were unaffected) and UTC-vs-local-time bucketing (we
@@ -59,15 +65,13 @@ match the merchant's own UTC+8 bucketing exactly in the reconciliation below).
   `customer_country` (`PH`/`PHILIPPINES`/`PHL`).
 - Missing `amount_usd` was back-filled from `fx_rates.csv`; weekend/holiday gaps
   in the FX file were forward-filled from the last known rate.
-- The cost estimate uses a simple counterfactual (pre-June rate × post-June
-  volume) and average attempt value; it doesn't control for normal week-to-week
-  volume or basket-size variation. I'd want a longer pre-period than 2 months to
-  be confident in the baseline, and I'd want to confirm with Ops whether
-  `NBLX-07`'s 54% rate is actually near its expected steady state or still
-  trending — I don't have enough post-launch weeks to tell.
-- `NBLX-07` rows have unreliable `customer_country` (the route doesn't pass
-  geography through, per `routes.json`), so I didn't segment its numbers by
-  country.
+- Cost estimate compares actual approved dollar volume to what a dollar-weighted
+  pre-June approval rate would produce against the same attempted volume; doesn't
+  control for normal week-to-week variation. Want a longer pre-period than 2
+  months, and confirmation from Ops on whether NBLX-07's ~54% is steady-state or
+  still trending.
+- `NBLX-07` rows have unreliable `customer_country` (route doesn't pass geography
+  through, per `routes.json`), so didn't segment its numbers by country.
 
 ## How to reproduce
 
@@ -83,13 +87,14 @@ rules — UTC+8 local date, deposits only, excludes filtered/pending — are app
 
 ## How you used AI
 
-Used Claude Code throughout: to scaffold the analysis script, and to think through
-what "approval rate" should mean before computing anything.
+Used Claude Code throughout: to scaffold the analysis script, think through what
+"approval rate" should mean, and review the draft before sending.
 
-One concrete place it got something wrong: my first pass at reconciling against
-`merchant_dashboard_export.csv` counted `PENDING` attempts as "reached a
-provider," which is a reasonable-sounding assumption but wrong — it produced a
-small, consistent over-count of attempts (exactly matching approvals, off on
-attempts) every single day, which was the tell. Excluding `PENDING` from that
-definition made the reconciliation match exactly, which is what confirmed the
-approval-rate definition used above rather than something plausible-but-wrong.
+Where it went wrong and how I caught it: the first cost estimate turned "lost
+attempts" into dollars by multiplying by one blended average transaction value
+for all of Nova's business — giving ~$433K. That's wrong, because `NBLX-07`'s
+deposits average ~$300 vs. ~$900 for the rest of Nova's business, so one blended
+average overstated the true cost by 2x+. I caught it by re-deriving the number a
+second way (dollar-weighted approval rate applied directly to attempted dollar
+volume, per route) and finding the two methods disagreed. The ~$158K figure above
+is the corrected one.

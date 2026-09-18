@@ -184,22 +184,40 @@ def main():
     print("Decline reasons after 6/11:")
     print(after_bin[after_bin["status"] == "DECLINED"]["decline_reason"].value_counts().to_string())
 
-    print("\n=== 7. Cost estimate: counterfactual approved USD volume, post-June ===")
-    baseline_rate = approval_rate(pre)
-    post_attempts = post[post["status"].isin(["APPROVED", "DECLINED"])]
-    actual_approved_usd = post_attempts.loc[post_attempts["status"] == "APPROVED", "amount_usd"].sum()
-    avg_attempt_usd = post_attempts["amount_usd"].mean()
-    counterfactual_approved_n = baseline_rate * len(post_attempts)
-    actual_approved_n = (post_attempts["status"] == "APPROVED").sum()
-    lost_attempts = counterfactual_approved_n - actual_approved_n
-    lost_usd = lost_attempts * avg_attempt_usd
-    print(f"Baseline (pre-Jun) approval rate: {baseline_rate:.3f}")
-    print(f"Post-Jun attempts (approved+declined): {len(post_attempts)}")
-    print(f"Actual approved: {actual_approved_n}  Counterfactual approved: {counterfactual_approved_n:.1f}")
-    print(f"Estimated lost approved attempts: {lost_attempts:.1f}")
-    print(f"Average attempt value (USD): {avg_attempt_usd:.2f}")
-    print(f"Estimated lost deposit volume (USD): {lost_usd:,.0f}")
-    print(f"Actual approved USD volume, post-Jun: {actual_approved_usd:,.0f}")
+    print("\n=== 7. Cost estimate: dollar-weighted, not count-weighted ===")
+    # NOTE: count-of-lost-attempts x a single blended average ticket size is
+    # WRONG here because NBLX-07's tickets (~$300) are much smaller than the
+    # rest of Nova's book (~$900) -- that approach overstated cost by >2x in
+    # an earlier draft. Instead: compare actual approved USD to what the
+    # PRE-JUNE DOLLAR-weighted approval rate (approved $ / reached $) would
+    # have produced against the actual post-June dollar volume attempted.
+    def dollar_rate(frame):
+        r = frame[frame["status"].isin(["APPROVED", "DECLINED"])]
+        return r.loc[r["status"] == "APPROVED", "amount_usd"].sum() / r["amount_usd"].sum()
+
+    def cost_usd(frame, baseline, label):
+        r = frame[frame["status"].isin(["APPROVED", "DECLINED"])]
+        actual = r.loc[r["status"] == "APPROVED", "amount_usd"].sum()
+        expected = baseline * r["amount_usd"].sum()
+        lost = expected - actual
+        print(f"{label}: reached_usd={r['amount_usd'].sum():,.0f} actual_approved_usd={actual:,.0f} "
+              f"expected_usd={expected:,.0f} lost_usd={lost:,.0f}")
+        return lost
+
+    pre_dollar_rate = dollar_rate(pre)
+    print(f"Dollar-weighted approval rate: pre-Jun={pre_dollar_rate:.3f} post-Jun={dollar_rate(post):.3f}")
+    total_lost = cost_usd(post, pre_dollar_rate, "TOTAL, Jun vs pre-Jun dollar-rate baseline")
+    excl_nblx_lost = cost_usd(post[post["route_id"] != "NBLX-07"], pre_dollar_rate, "  Excluding NBLX-07")
+    nblx_lost = cost_usd(post[post["route_id"] == "NBLX-07"], pre_dollar_rate, "  NBLX-07 alone")
+    print(f"  (check: {excl_nblx_lost:,.0f} + {nblx_lost:,.0f} = {excl_nblx_lost + nblx_lost:,.0f} "
+          f"vs total {total_lost:,.0f})")
+
+    sorva_jp = nova[(nova["route_id"] == "SORVA-14") & (nova["customer_country"] == "JP")]
+    sorva_before = sorva_jp[sorva_jp["utc_date"] < pd.Timestamp("2026-06-11").date()]
+    sorva_after = sorva_jp[sorva_jp["utc_date"] >= pd.Timestamp("2026-06-11").date()]
+    sorva_baseline = dollar_rate(sorva_before)
+    print(f"\nSORVA-14/JP own dollar-rate baseline (pre-6/11): {sorva_baseline:.3f}")
+    cost_usd(sorva_after, sorva_baseline, "  SORVA-14/JP alone, vs its own pre-6/11 baseline")
 
     print("\n=== 8. Internal-only cost: FILTERED volume on NBLX-07 (invisible to merchant) ===")
     nblx07_filtered = nblx07[nblx07["status"] == "FILTERED"]
