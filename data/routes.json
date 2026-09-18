@@ -1,0 +1,168 @@
+{
+  "routes": [
+    {
+      "route_id": "KRTX-03",
+      "processor": "KRTX",
+      "country": "SG",
+      "live_from": "2024-11-05",
+      "currencies": [
+        "JPY",
+        "PHP",
+        "ZAR",
+        "USD",
+        "EUR"
+      ],
+      "payment_methods": [
+        "CARD"
+      ],
+      "status": "ACTIVE",
+      "geo_passthrough": true,
+      "notes": "Primary card route, Asia-Pacific."
+    },
+    {
+      "route_id": "KRTX-11",
+      "processor": "KRTX",
+      "country": "SG",
+      "live_from": "2025-02-18",
+      "currencies": [
+        "PHP",
+        "ZAR",
+        "VND",
+        "IDR",
+        "EUR"
+      ],
+      "payment_methods": [
+        "BANK_TRANSFER"
+      ],
+      "status": "ACTIVE",
+      "geo_passthrough": true,
+      "notes": "Local bank transfer, Asia-Pacific."
+    },
+    {
+      "route_id": "SORVA-14",
+      "processor": "SORVA",
+      "country": "GB",
+      "live_from": "2024-08-22",
+      "currencies": [
+        "USD",
+        "EUR",
+        "JPY"
+      ],
+      "payment_methods": [
+        "CARD"
+      ],
+      "status": "ACTIVE",
+      "geo_passthrough": true,
+      "notes": "Card route. Acquirer changed BIN allocation for JP cards on 2026-06-11."
+    },
+    {
+      "route_id": "SORVA-22",
+      "processor": "SORVA",
+      "country": "GB",
+      "live_from": "2025-05-30",
+      "currencies": [
+        "PHP",
+        "INR"
+      ],
+      "payment_methods": [
+        "EWALLET"
+      ],
+      "status": "ACTIVE",
+      "geo_passthrough": true,
+      "notes": "E-wallet aggregation."
+    },
+    {
+      "route_id": "NBLX-07",
+      "processor": "NBLX",
+      "country": "ID",
+      "live_from": "2026-06-02",
+      "currencies": [
+        "IDR",
+        "VND"
+      ],
+      "payment_methods": [
+        "BANK_TRANSFER"
+      ],
+      "status": "ACTIVE",
+      "geo_passthrough": false,
+      "notes": "New local bank transfer route. Integration does not pass customer geography; reporting falls back to a default country."
+    },
+    {
+      "route_id": "NBLX-02",
+      "processor": "NBLX",
+      "country": "ID",
+      "live_from": "2025-09-14",
+      "currencies": [
+        "INR",
+        "IDR"
+      ],
+      "payment_methods": [
+        "CARD"
+      ],
+      "status": "ACTIVE",
+      "geo_passthrough": true,
+      "notes": "Card route, South Asia."
+    },
+    {
+      "route_id": "SORVA-09",
+      "processor": "SORVA",
+      "country": "GB",
+      "live_from": "2024-03-11",
+      "currencies": [
+        "USD"
+      ],
+      "payment_methods": [
+        "CARD"
+      ],
+      "status": "INACTIVE",
+      "geo_passthrough": true,
+      "notes": "Deprecated, replaced by SORVA-14."
+    },
+    {
+      "route_id": "KRTX-08",
+      "processor": "KRTX",
+      "country": "SG",
+      "live_from": "2025-07-01",
+      "currencies": [
+        "THB"
+      ],
+      "payment_methods": [
+        "BANK_TRANSFER"
+      ],
+      "status": "MAINTENANCE",
+      "geo_passthrough": true,
+      "notes": "Suspended pending processor certification."
+    },
+    {
+      "route_id": "HALO-01",
+      "processor": "HALO",
+      "country": "AE",
+      "live_from": "2026-01-20",
+      "currencies": [
+        "USD",
+        "EUR"
+      ],
+      "payment_methods": [
+        "CARD"
+      ],
+      "status": "ACTIVE",
+      "geo_passthrough": true,
+      "notes": "Not yet enabled for any merchant."
+    },
+    {
+      "route_id": "HALO-04",
+      "processor": "HALO",
+      "country": "AE",
+      "live_from": "2026-03-02",
+      "currencies": [
+        "ZAR"
+      ],
+      "payment_methods": [
+        "EWALLET"
+      ],
+      "status": "ACTIVE",
+      "geo_passthrough": true,
+      "notes": "Pilot, no production traffic."
+    }
+  ]
+}
